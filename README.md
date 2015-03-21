@@ -28,6 +28,19 @@ complete build environment, and using it for your own development.
 
 ### Building the image
 
+The "zeroeth" step is to create a docker image you can use at all
+(since public docker images are Just Wrong - not only is the
+documented provenance of an image usually unclear, but the tools
+themselves don't validate that the downloads match the manifests, so
+you don't have any confidence that you even *got* the
+intended-but-unverified packages.)  On Debian, at least, the `make
+basedeb` step uses `mkimage.sh` to produce one locally with
+`debootstrap` which will get packages using your `sources.list` and
+already-configured package-signing mechanisms to assure that you're
+building something out of Debian packages which you actually got from
+Debian itself - there is of course room for more concern beyond that,
+but it seems like a reasonable standard to start from.
+
 For the first step, simply `make image` which took about an hour over
 DSL, and will probably be faster for you... two things you should know
 in advance:
