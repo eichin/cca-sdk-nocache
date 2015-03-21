@@ -1,5 +1,8 @@
 IMAGE=$$USER/chrome_apps_nocache
 
+basedeb:
+	time sudo /usr/share/docker.io/contrib/mkimage.sh -t cca_sdk/basedeb debootstrap --variant=minbase testing
+
 image: chrome_apps.df
 	docker build -t $(IMAGE) - < chrome_apps.df
 
