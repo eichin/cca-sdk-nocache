@@ -1,0 +1,25 @@
+# based on https://developer.chrome.com/apps/chrome_apps_on_mobile
+# ebro$ time docker build -t eichin/chrome_apps_nocache - < chrome_apps.df
+
+# This version is "slow" because we're using proper https downloading,
+#   and thus *not* caching anything between here and the net at large.
+#   Once the package is built, that's no longer a problem.
+
+FROM cca_sdk/basedeb
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update
+RUN apt-get install -y nodejs openjdk-7-jdk libandroidsdk-common-java ant npm2deb nodejs-legacy libandroidsdk-sdklib-java android-tools-adb android-tools-fastboot android-tools-fsutils aapt zipalign wget gradle
+# for platform-tools:
+RUN dpkg --add-architecture i386
+RUN apt-get install libc6-i386 lib32stdc++6 lib32gcc1 lib32z1
+# expect
+RUN npm install -g cca
+# ADD android-sdk_r24.0.2-linux.tgz android-sdk-linux.tgz
+RUN wget https://dl.google.com/android/android-sdk_r24.0.2-linux.tgz -O android-sdk-linux.tgz
+RUN tar xf android-sdk-linux.tgz
+RUN mkdir -p ~/.android
+ENV ANDROID_HOME /android-sdk-linux
+RUN cca analytics disable
+RUN while sleep 1; do echo y; done | $ANDROID_HOME/tools/android update sdk --no-ui
+RUN cca checkenv
