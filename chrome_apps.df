@@ -20,6 +20,7 @@ RUN wget https://dl.google.com/android/android-sdk_r24.0.2-linux.tgz -O android-
 RUN tar xf android-sdk-linux.tgz
 RUN mkdir -p ~/.android
 ENV ANDROID_HOME /android-sdk-linux
+ENV GRADLE_USER_HOME /code
 RUN cca analytics disable
 RUN while sleep 1; do echo y; done | $ANDROID_HOME/tools/android update sdk --no-ui
 RUN cca checkenv
