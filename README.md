@@ -77,7 +77,7 @@ for help.  You can take basic baby steps simply by exploring the
 itself is just rendering `code/sample/www/index.html`, so if you just
 edit that (and add other content there, look at the existing layout
 for images and javascript assets) and re-run the `cca build` in that
-directory (`make rebuild-sample` will do this directly) you should be
+directory (`make rebuild` will do this directly) you should be
 able to copy the new `apk` over to your phone and see the results.
 
 You will likely want to copy the lines in the `Makefile` to fit your

@@ -1,4 +1,5 @@
 IMAGE=$$USER/chrome_apps_nocache
+PROJECT=sample
 
 basedeb:
 	time sudo /usr/share/docker.io/contrib/mkimage.sh -t cca_sdk/basedeb debootstrap --variant=minbase testing
@@ -9,15 +10,15 @@ image: chrome_apps.df
 check:
 	docker run -i $(IMAGE) cca checkenv
 
-sample:
+$(PROJECT):
 	mkdir -p code
-	docker run -i -v $$(pwd)/code:/code -w /code $(IMAGE) cca create sample
-	docker run -i -v $$(pwd)/code:/code -w /code/sample $(IMAGE) cca build
-	ls -l code/sample/platforms/android/build/outputs/apk/
+	docker run -i -v $$(pwd)/code:/code -w /code $(IMAGE) cca create $(PROJECT)
+	docker run -i -v $$(pwd)/code:/code -w /code/$(PROJECT) $(IMAGE) cca build
+	ls -l code/$(PROJECT)/platforms/android/build/outputs/apk/
 
-rebuild-sample:
-	docker run -i -v $$(pwd)/code:/code -w /code/sample $(IMAGE) cca build
-	ls -l code/sample/platforms/android/build/outputs/apk/
+rebuild:
+	docker run -i -v $$(pwd)/code:/code -w /code/$(PROJECT) $(IMAGE) cca build
+	ls -l code/$(PROJECT)/platforms/android/build/outputs/apk/
 
 shell:
-	docker run -i -v $$(pwd)/code:/code -w /code/sample $(IMAGE) bash -i
+	docker run -i -v $$(pwd)/code:/code -w /code/$(PROJECT) $(IMAGE) bash -i
