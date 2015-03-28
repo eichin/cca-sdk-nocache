@@ -9,18 +9,34 @@ FROM cca_sdk/basedeb
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
-RUN apt-get install -y nodejs openjdk-7-jdk libandroidsdk-common-java ant npm2deb nodejs-legacy libandroidsdk-sdklib-java android-tools-adb android-tools-fastboot android-tools-fsutils aapt zipalign wget gradle
+RUN apt-get install -y nodejs openjdk-7-jdk libandroidsdk-common-java ant npm2deb nodejs-legacy libandroidsdk-sdklib-java android-tools-adb android-tools-fastboot android-tools-fsutils aapt zipalign wget gradle git moreutils
+# Makefile needs ifdata from moreutils
+# App dev with Polymer needs bower which needs git
 # for platform-tools:
 RUN dpkg --add-architecture i386
 RUN apt-get install libc6-i386 lib32stdc++6 lib32gcc1 lib32z1
-# expect
+# prime the npm search cache
+RUN npm search cca > /dev/null
 RUN npm install -g cca
-# ADD android-sdk_r24.0.2-linux.tgz android-sdk-linux.tgz
-RUN wget https://dl.google.com/android/android-sdk_r24.0.2-linux.tgz -O android-sdk-linux.tgz
+# TODO: scrape the page in-line
+# curl https://developer.android.com/sdk/index.html |
+#  python -c 'from sys import stdin; from lxml.cssselect import CSSSelector as c; from lxml.etree import HTML as H; print c("a#linux-tools")(H(stdin.read()))[0].get("href")'
+# will generate the url, with a lot installed.
+# instead, just -A linux.tgz --follow-tags=a -r -l1 -np -nd
+# RUN wget https://dl.google.com/android/android-sdk_r24.1.2-linux.tgz -O android-sdk-linux.tgz
+RUN wget -A linux.tgz --follow-tags=a -r -l1 -np -nd https://dl.google.com/android/android-sdk_r24.1.2-linux.tgz  -O android-sdk-linux.tgz
 RUN tar xf android-sdk-linux.tgz
 RUN mkdir -p ~/.android
+# pre-cook a persistent signing key so we can actually upgrade the app while developing
+# http://developer.android.com/tools/publishing/app-signing.html
+RUN keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000  -dname 'CN=Android Debug,O=Android,C=US'
 ENV ANDROID_HOME /android-sdk-linux
 ENV GRADLE_USER_HOME /code
 RUN cca analytics disable
 RUN while sleep 1; do echo y; done | $ANDROID_HOME/tools/android update sdk --no-ui
 RUN cca checkenv
+# include "bower" to make it easier to manage dependencies (as recommended by Polymer)
+RUN npm install -g bower
+# this allows "bower --allow-root install --save Polymer/polymer" in /code/$PKG
+# bower does caching, so pre-fetch some packages will actually help too
+# /code/tipcalc/www# bower --allow-root install --save Polymer/core-icon-button
