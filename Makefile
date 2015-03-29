@@ -27,3 +27,9 @@ shell:
 testwww:
 	@echo Open http://127.0.0.1:$(LPORT)/ in your browser.
 	docker run -i -v $$(pwd)/code:/code -w /code/$(PROJECT)/www -p 127.0.0.1:$(LPORT):8000 $(IMAGE) python3 -m http.server
+
+savekey:
+	docker run -i -v $$(pwd)/code:/code $(IMAGE) cp /root/.android/debug.keystore /code
+
+restorekey:
+	docker run -i -v $$(pwd)/code:/code $(IMAGE) cp /code/debug.keystore /root/.android/
