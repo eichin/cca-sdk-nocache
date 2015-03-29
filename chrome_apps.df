@@ -9,7 +9,7 @@ FROM cca_sdk/basedeb
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
-RUN apt-get install -y nodejs openjdk-7-jdk libandroidsdk-common-java ant npm2deb nodejs-legacy libandroidsdk-sdklib-java android-tools-adb android-tools-fastboot android-tools-fsutils aapt zipalign wget gradle git moreutils
+RUN apt-get install -y nodejs openjdk-7-jdk libandroidsdk-common-java ant npm2deb nodejs-legacy libandroidsdk-sdklib-java android-tools-adb android-tools-fastboot android-tools-fsutils aapt zipalign wget gradle git moreutils html-xml-utils curl
 # Makefile needs ifdata from moreutils
 # App dev with Polymer needs bower which needs git
 # for platform-tools:
@@ -18,17 +18,15 @@ RUN apt-get install libc6-i386 lib32stdc++6 lib32gcc1 lib32z1
 # prime the npm search cache
 RUN npm search cca > /dev/null
 RUN npm install -g cca
-# TODO: scrape the page in-line
-# curl https://developer.android.com/sdk/index.html |
-#  python -c 'from sys import stdin; from lxml.cssselect import CSSSelector as c; from lxml.etree import HTML as H; print c("a#linux-tools")(H(stdin.read()))[0].get("href")'
-# will generate the url, with a lot installed.
-# instead, just -A linux.tgz --follow-tags=a -r -l1 -np -nd
-# RUN wget https://dl.google.com/android/android-sdk_r24.1.2-linux.tgz -O android-sdk-linux.tgz
-RUN wget -A linux.tgz --follow-tags=a -r -l1 -np -nd https://dl.google.com/android/android-sdk_r24.1.2-linux.tgz  -O android-sdk-linux.tgz
+# Fetch the linux sdk by finding -linux.tgz in the sdk index page
+# error suppression is for an <a href="...""> typo on line 696
+RUN wget $(curl -s https://developer.android.com/sdk/index.html | hxwls 2>/dev/null | egrep -e '-linux.tgz$') -O android-sdk-linux.tgz
+# TODO: check the sha1sum
 RUN tar xf android-sdk-linux.tgz
 RUN mkdir -p ~/.android
 # pre-cook a persistent signing key so we can actually upgrade the app while developing
 # http://developer.android.com/tools/publishing/app-signing.html
+# This doesn't help with updating the image, still have to save it outside for that.
 RUN keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000  -dname 'CN=Android Debug,O=Android,C=US'
 ENV ANDROID_HOME /android-sdk-linux
 ENV GRADLE_USER_HOME /code
