@@ -31,5 +31,6 @@ testwww:
 savekey:
 	docker run -i -v $$(pwd)/code:/code $(IMAGE) cp /root/.android/debug.keystore /code
 
-restorekey:
-	docker run -i -v $$(pwd)/code:/code $(IMAGE) cp /code/debug.keystore /root/.android/
+rebuild-samekey:
+	docker run -i -v $$(pwd)/code:/code -w /code/$(PROJECT) $(IMAGE) sh -c "cp /code/debug.keystore /root/.android/; cca build"
+	ls -l code/$(PROJECT)/platforms/android/build/outputs/apk/
