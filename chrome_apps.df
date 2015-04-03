@@ -20,8 +20,15 @@ RUN npm search cca > /dev/null
 RUN npm install -g cca
 # Fetch the linux sdk by finding -linux.tgz in the sdk index page
 # error suppression is for an <a href="...""> typo on line 696
-RUN wget $(curl -s https://developer.android.com/sdk/index.html | hxwls 2>/dev/null | egrep -e '-linux.tgz$') -O android-sdk-linux.tgz
-# TODO: check the sha1sum
+RUN wget $(curl -s https://developer.android.com/sdk/index.html | tee d-a-c-index.html | hxwls 2>/dev/null | egrep -e '-linux.tgz$') -O android-sdk-linux.tgz
+RUN sha1sum < android-sdk-linux.tgz | cut -f1 -d' '
+# check that the sha1sum matches any of the given ones "because CSS can't do parents"
+#  so we can't select the relative one without doing something more complicated with 
+#  pipeline: (a) fix quoting typo (b) normalize (but the doctype confuses hxselect)
+#            (c) print all items in find the 4th column in the table
+#            (d) use grep to check if at least one of them is what we actually got.
+#            (e) sha1sum still prints a filename ("-") even in pipe mode, so strip that
+RUN if sed 's/"">/">/' < d-a-c-index.html | hxnormalize -xd | hxselect -i 'table.download > tbody > tr > td + td + td + td' | grep -q $(sha1sum < android-sdk-linux.tgz | cut -f1 -d' '); then echo FOUND SHA1SUM; else echo "NO MATCH FOR SHA1SUM"; exit 1; fi
 RUN tar xf android-sdk-linux.tgz
 RUN mkdir -p ~/.android
 # pre-cook a persistent signing key so we can actually upgrade the app while developing
